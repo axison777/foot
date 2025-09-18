@@ -23,6 +23,17 @@ export class StandingsComponent implements OnInit, OnDestroy {
 
   categories: CategoryCode[] = ['F_U16','F_U20','M_U16','M_U18','M_U20','M_SENIOR'];
 
+  private readonly defaultSlots = { championsLeague: 0, europaLeague: 0, conferenceLeague: 0, relegation: 0 } as const;
+  get slots(): { championsLeague: number; europaLeague: number; conferenceLeague: number; relegation: number } {
+    const s = this.competition?.qualificationSlots || {} as any;
+    return {
+      championsLeague: s.championsLeague ?? 0,
+      europaLeague: s.europaLeague ?? 0,
+      conferenceLeague: s.conferenceLeague ?? 0,
+      relegation: s.relegation ?? 0,
+    };
+  }
+
   constructor(
     private route: ActivatedRoute,
     private standingsSvc: StandingsService

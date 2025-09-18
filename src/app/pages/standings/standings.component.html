@@ -24,10 +24,10 @@
       </thead>
       <tbody>
         <tr *ngFor="let row of standings.rows; let i = index; trackBy: trackByTeam"
-            [class.zone-cl]="i < (competition?.qualificationSlots?.championsLeague ?? 0)"
-            [class.zone-el]="i >= (competition?.qualificationSlots?.championsLeague ?? 0) && i < ((competition?.qualificationSlots?.championsLeague ?? 0) + (competition?.qualificationSlots?.europaLeague ?? 0))"
-            [class.zone-conf]="i >= ((competition?.qualificationSlots?.championsLeague ?? 0) + (competition?.qualificationSlots?.europaLeague ?? 0)) && i < ((competition?.qualificationSlots?.championsLeague ?? 0) + (competition?.qualificationSlots?.europaLeague ?? 0) + (competition?.qualificationSlots?.conferenceLeague ?? 0))"
-            [class.zone-rel]="i >= (standings.rows.length - (competition?.qualificationSlots?.relegation ?? 0))">
+            [class.zone-cl]="i < slots.championsLeague"
+            [class.zone-el]="i >= slots.championsLeague && i < (slots.championsLeague + slots.europaLeague)"
+            [class.zone-conf]="i >= (slots.championsLeague + slots.europaLeague) && i < (slots.championsLeague + slots.europaLeague + slots.conferenceLeague)"
+            [class.zone-rel]="i >= (standings.rows.length - slots.relegation)">
           <td class="col-pos">{{ i + 1 }}</td>
           <td class="col-team">
             <div class="team">
