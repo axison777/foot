@@ -400,7 +400,13 @@ export class CalendrierComponent implements OnInit {
         }
       }
 
-      const teams: TeamLite[] = Array.from(teamNames).map((name, idx) => ({ id: `T${idx + 1}`, name }));
+      // Fallback: si pas d'équipes dans le calendrier, utiliser la liste chargée (vue démo)
+      let teams: TeamLite[];
+      if (teamNames.size > 0) {
+        teams = Array.from(teamNames).map((name, idx) => ({ id: `T${idx + 1}`, name }));
+      } else {
+        teams = (this.teams || []).map((t, idx) => ({ id: String(t.id ?? idx + 1), name: t.name || t.abbreviation || `Équipe ${idx+1}` } as TeamLite));
+      }
       const nameToId = new Map(teams.map(t => [t.name, t.id]));
 
       // Extraire les matchs joués avec score si disponibles
@@ -428,7 +434,11 @@ export class CalendrierComponent implements OnInit {
         }
       }
 
+      // Si aucun score, on force un classement initial: Pts=0, tri alphabétique
       this.standings = computeLeagueStandings(teams, matches);
+      if ((this.standings.kind === 'LEAGUE') && this.standings.rows.every(r => r.played === 0)) {
+        this.standings.rows.sort((a, b) => a.teamName.localeCompare(b.teamName));
+      }
     } catch (e) {
       // En cas d’erreur, ne pas bloquer l’affichage du calendrier
       this.standings = undefined;
