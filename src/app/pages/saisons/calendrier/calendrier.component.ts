@@ -401,13 +401,18 @@ export class CalendrierComponent implements OnInit {
         }
       }
 
-      // Fallback: si pas d'équipes dans le calendrier, utiliser les équipes de la saison (league.teams), sinon la liste globale
+      // Fallback: si pas d'équipes dans le calendrier, utiliser les équipes de la saison (league.teams), sinon la liste globale, sinon un mock de démo
       let teams: TeamLite[];
       if (teamNames.size > 0) {
         teams = Array.from(teamNames).map((name, idx) => ({ id: `T${idx + 1}`, name }));
       } else {
-        teams = (this.seasonTeams?.length ? this.seasonTeams : this.teams || [])
-          .map((t: any, idx: number) => ({ id: String(t.id ?? idx + 1), name: t.name || t.abbreviation || `Équipe ${idx+1}` } as TeamLite));
+        const source = (this.seasonTeams?.length ? this.seasonTeams : (this.teams || [])).map((t: any, idx: number) => ({ id: String(t.id ?? idx + 1), name: t.name || t.abbreviation || `Équipe ${idx+1}` } as TeamLite));
+        teams = source.length ? source : [
+          { id: 'M1', name: 'Mock United' },
+          { id: 'M2', name: 'AS Démo' },
+          { id: 'M3', name: 'FC Exemple' },
+          { id: 'M4', name: 'Olympique Test' }
+        ];
       }
       const nameToId = new Map(teams.map(t => [t.name, t.id]));
 

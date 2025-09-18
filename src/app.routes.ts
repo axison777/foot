@@ -24,6 +24,8 @@ import { PlayersComponent } from './app/pages/players/players.component';
 import { EquipeDetailsComponent } from './app/pages/equipe-details/equipe-details.component';
 import { PlayerDetailsComponent } from './app/pages/player-details/player-details.component';
 import { TeamCategoriesComponent } from './app/pages/team-categories/team-categories.component';
+import { RolesComponent } from './app/pages/roles/roles.component';
+import { PermissionsComponent } from './app/pages/permissions/permissions.component';
 export const appRoutes: Routes = [
     { path: 'login', component: LoginComponent },
     {path:'export-pdf',component:ExportMatchComponent, canActivate: [AuthGuard] },
@@ -46,6 +48,8 @@ export const appRoutes: Routes = [
              {path: 'competitions', component:CompetitionsComponent, canActivate: [AuthGuard] },
              {path: 'clubs', component:ClubsComponent, canActivate: [AuthGuard] },
              {path: 'joueurs', component:PlayersComponent, canActivate: [AuthGuard] },
+             {path: 'parametres/roles', component: RolesComponent, canActivate: [AuthGuard] },
+             {path: 'parametres/permissions', component: PermissionsComponent, canActivate: [AuthGuard] },
              {path: 'equipe-details/:id', component:EquipeDetailsComponent, canActivate: [AuthGuard] },
              {path: 'joueur-details/:id', component:PlayerDetailsComponent, canActivate: [AuthGuard] },
              {path: 'categories-equipe', component:TeamCategoriesComponent, canActivate: [AuthGuard] },
