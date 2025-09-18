@@ -24,10 +24,10 @@
       </thead>
       <tbody>
         <tr *ngFor="let row of standings.rows; let i = index; trackBy: trackByTeam"
-            [class.zone-cl]="competition.qualificationSlots?.championsLeague && i < competition.qualificationSlots.championsLeague"
-            [class.zone-el]="competition.qualificationSlots?.europaLeague && i >= (competition.qualificationSlots?.championsLeague||0) && i < ( (competition.qualificationSlots?.championsLeague||0) + (competition.qualificationSlots?.europaLeague||0) )"
-            [class.zone-conf]="competition.qualificationSlots?.conferenceLeague && i >= ((competition.qualificationSlots?.championsLeague||0)+(competition.qualificationSlots?.europaLeague||0)) && i < ((competition.qualificationSlots?.championsLeague||0)+(competition.qualificationSlots?.europaLeague||0)+(competition.qualificationSlots?.conferenceLeague||0))"
-            [class.zone-rel]="competition.qualificationSlots?.relegation && i >= (standings.rows.length - (competition.qualificationSlots?.relegation||0))">
+            [class.zone-cl]="i < (competition?.qualificationSlots?.championsLeague ?? 0)"
+            [class.zone-el]="i >= (competition?.qualificationSlots?.championsLeague ?? 0) && i < ((competition?.qualificationSlots?.championsLeague ?? 0) + (competition?.qualificationSlots?.europaLeague ?? 0))"
+            [class.zone-conf]="i >= ((competition?.qualificationSlots?.championsLeague ?? 0) + (competition?.qualificationSlots?.europaLeague ?? 0)) && i < ((competition?.qualificationSlots?.championsLeague ?? 0) + (competition?.qualificationSlots?.europaLeague ?? 0) + (competition?.qualificationSlots?.conferenceLeague ?? 0))"
+            [class.zone-rel]="i >= (standings.rows.length - (competition?.qualificationSlots?.relegation ?? 0))">
           <td class="col-pos">{{ i + 1 }}</td>
           <td class="col-team">
             <div class="team">

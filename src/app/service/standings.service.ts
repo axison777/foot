@@ -30,16 +30,13 @@ export class StandingsService {
   }
 
   getStandings(competitionId: string, category: CategoryCode): Observable<AnyStandings> {
-    return this.getCompetitionMeta(competitionId).pipe(
-      switchMap(comp =>
-        forkJoin({
-          comp: [comp],
-          teams: this.getTeams(competitionId, category),
-          matches: this.getMatches(competitionId, category)
-        })
-      ),
-      map(({ comp, teams, matches }) => {
-        const competition = (comp as CompetitionMeta[])[0] || comp as unknown as CompetitionMeta;
+    return forkJoin({
+      comp: this.getCompetitionMeta(competitionId),
+      teams: this.getTeams(competitionId, category),
+      matches: this.getMatches(competitionId, category)
+    }).pipe(
+      map(({ comp, teams, matches }: { comp: CompetitionMeta; teams: TeamLite[]; matches: MatchLite[] }) => {
+        const competition = comp;
         if (competition.format === 'LEAGUE') {
           return computeLeagueStandings(teams, matches);
         }
