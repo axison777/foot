@@ -262,6 +262,7 @@ export class CalendrierComponent implements OnInit {
         console.log(this.groupId);
 
         this.getCalendar();
+        this.loadSeasonTeams();
         this.loadStadiums();
         this.loadTeams();
 
@@ -400,12 +401,13 @@ export class CalendrierComponent implements OnInit {
         }
       }
 
-      // Fallback: si pas d'équipes dans le calendrier, utiliser la liste chargée (vue démo)
+      // Fallback: si pas d'équipes dans le calendrier, utiliser les équipes de la saison (league.teams), sinon la liste globale
       let teams: TeamLite[];
       if (teamNames.size > 0) {
         teams = Array.from(teamNames).map((name, idx) => ({ id: `T${idx + 1}`, name }));
       } else {
-        teams = (this.teams || []).map((t, idx) => ({ id: String(t.id ?? idx + 1), name: t.name || t.abbreviation || `Équipe ${idx+1}` } as TeamLite));
+        teams = (this.seasonTeams?.length ? this.seasonTeams : this.teams || [])
+          .map((t: any, idx: number) => ({ id: String(t.id ?? idx + 1), name: t.name || t.abbreviation || `Équipe ${idx+1}` } as TeamLite));
       }
       const nameToId = new Map(teams.map(t => [t.name, t.id]));
 
@@ -443,6 +445,22 @@ export class CalendrierComponent implements OnInit {
       // En cas d’erreur, ne pas bloquer l’affichage du calendrier
       this.standings = undefined;
     }
+  }
+
+  seasonTeams: any[] = [];
+  private loadSeasonTeams() {
+    if (!this.seasonId) return;
+    this.saisonService.getSeasonById(this.seasonId).subscribe({
+      next: (res: any) => {
+        const leagueTeams = res?.data?.season?.league?.teams || [];
+        this.seasonTeams = leagueTeams;
+        // Recalcule le classement initial si nécessaire
+        this.buildSeasonStandings();
+      },
+      error: () => {
+        // silencieux: on garde les fallbacks
+      }
+    });
   }
 
 exportAsExcel(phase: Phase) {
