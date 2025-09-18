@@ -1,0 +1,12 @@
+.player-stats {
+  .header {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
+    .tabs { display: flex; gap: 8px; }
+    button { padding: 8px 12px; border: 1px solid #ddd; background: #f8f8f8; cursor: pointer; }
+    .active { background: #111; color: #fff; }
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 10px 8px; border-bottom: 1px solid #eee; text-align: left; }
+  .loading { padding: 24px; text-align: center; }
+}
+

@@ -29,6 +29,8 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { CardModule } from 'primeng/card';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { PdfGeneratorService } from '../../../service/pdf-generator.service';
+import { computeLeagueStandings } from '../../../core/utils/standings-calculator';
+import { AnyStandings, StandingsRow, TeamLite, MatchLite } from '../../../models/standings.model';
 
 interface Match {
   number: number;
@@ -230,6 +232,20 @@ export class CalendrierComponent implements OnInit {
 
     second_leg_is_enabled:boolean=false
 
+    // Classement
+    selectedView: 'CALENDAR' | 'STANDINGS' | string = 'CALENDAR';
+    standings?: AnyStandings;
+    get leagueRows(): StandingsRow[] {
+        return this.standings && this.standings.kind === 'LEAGUE' ? this.standings.rows : [];
+    }
+
+    showStandings(): void {
+        this.selectedView = 'STANDINGS';
+        if (!this.standings) {
+            this.buildSeasonStandings();
+        }
+    }
+
 
     constructor(private route: ActivatedRoute, private router: Router, private saisonService: SaisonService, private pdfGeneratorService: PdfGeneratorService, private stadeService:StadeService,
         private matchService: MatchService, private messageService:MessageService, private equipeService:EquipeService,
@@ -253,6 +269,7 @@ export class CalendrierComponent implements OnInit {
         console.log(this.groupId);
 
         this.getCalendar();
+        this.loadSeasonTeams();
         this.loadStadiums();
         this.loadTeams();
 
@@ -305,6 +322,8 @@ export class CalendrierComponent implements OnInit {
             day.groupedMatchesByDate = this.groupMatchesByDate(day.matches);
         });
         });
+        // Construire le classement sur la saison
+        this.buildSeasonStandings();
         this.loading = false;
       },
       error: () => {
@@ -336,6 +355,8 @@ export class CalendrierComponent implements OnInit {
             day.groupedMatchesByDate = this.groupMatchesByDate(day.matches);
         });
         });
+        // Construire le classement sur la poule sélectionnée
+        this.buildSeasonStandings();
         this.loading = false;
       },
       error: () => {
@@ -373,6 +394,86 @@ export class CalendrierComponent implements OnInit {
 
   return result;
 }
+
+  private buildSeasonStandings(): void {
+    try {
+      // Extraire toutes les équipes présentes dans la saison (via calendrier)
+      const teamNames = new Set<string>();
+      for (const phase of this.phases || []) {
+        for (const day of phase?.matchdays || []) {
+          for (const m of (day.matches as any[] | undefined) || []) {
+            if (m?.team1) teamNames.add(m.team1);
+            if (m?.team2) teamNames.add(m.team2);
+          }
+        }
+      }
+
+      // Fallback: si pas d'équipes dans le calendrier, utiliser les équipes de la saison (league.teams), sinon la liste globale, sinon un mock de démo
+      let teams: TeamLite[];
+      if (teamNames.size > 0) {
+        teams = Array.from(teamNames).map((name, idx) => ({ id: `T${idx + 1}`, name }));
+      } else {
+        const source = (this.seasonTeams?.length ? this.seasonTeams : (this.teams || [])).map((t: any, idx: number) => ({ id: String(t.id ?? idx + 1), name: t.name || t.abbreviation || `Équipe ${idx+1}` } as TeamLite));
+        teams = source.length ? source : [
+          { id: 'M1', name: 'Mock United' },
+          { id: 'M2', name: 'AS Démo' },
+          { id: 'M3', name: 'FC Exemple' },
+          { id: 'M4', name: 'Olympique Test' }
+        ];
+      }
+      const nameToId = new Map(teams.map(t => [t.name, t.id]));
+
+      // Extraire les matchs joués avec score si disponibles
+      const matches: MatchLite[] = [];
+      for (const phase of this.phases || []) {
+        for (const day of phase?.matchdays || []) {
+          for (const m of (day.matches as any[] | undefined) || []) {
+            // Si pas de score, on ignore pour le classement
+            const hasScore = typeof m?.team1_goals === 'number' && typeof m?.team2_goals === 'number';
+            if (!hasScore) continue;
+            const homeId = nameToId.get(m.team1) || m.team1_id || '';
+            const awayId = nameToId.get(m.team2) || m.team2_id || '';
+            if (!homeId || !awayId) continue;
+            matches.push({
+              id: `${m?.football_match_id || m?.id || Math.random()}`,
+              competitionId: this.seasonId || 'season',
+              category: 'M_SENIOR',
+              status: 'FINISHED',
+              homeTeamId: String(homeId),
+              awayTeamId: String(awayId),
+              homeGoals: m.team1_goals,
+              awayGoals: m.team2_goals,
+            });
+          }
+        }
+      }
+
+      // Si aucun score, on force un classement initial: Pts=0, tri alphabétique
+      this.standings = computeLeagueStandings(teams, matches);
+      if ((this.standings.kind === 'LEAGUE') && this.standings.rows.every(r => r.played === 0)) {
+        this.standings.rows.sort((a, b) => a.teamName.localeCompare(b.teamName));
+      }
+    } catch (e) {
+      // En cas d’erreur, ne pas bloquer l’affichage du calendrier
+      this.standings = undefined;
+    }
+  }
+
+  seasonTeams: any[] = [];
+  private loadSeasonTeams() {
+    if (!this.seasonId) return;
+    this.saisonService.getSeasonById(this.seasonId).subscribe({
+      next: (res: any) => {
+        const leagueTeams = res?.data?.season?.league?.teams || [];
+        this.seasonTeams = leagueTeams;
+        // Recalcule le classement initial si nécessaire
+        this.buildSeasonStandings();
+      },
+      error: () => {
+        // silencieux: on garde les fallbacks
+      }
+    });
+  }
 
 exportAsExcel(phase: Phase) {
   const rows: any[] = [];

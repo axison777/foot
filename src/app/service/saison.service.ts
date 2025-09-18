@@ -21,6 +21,11 @@ export class SaisonService {
     return this.http.get<Saison>(environment.apiUrl+'/calendar/'+id);
   }
 
+  // Fetch season with league and teams for standings
+  getSeasonById(id: string): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/seasons/${id}`);
+  }
+
   getAll(): Observable<any[]> {
     return this.http.get<any[]>(this.apiUrl+'/all');
   }
