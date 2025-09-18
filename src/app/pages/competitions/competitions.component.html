@@ -172,12 +172,12 @@
 </div>
 
 <p-dialog [header]="selectedLeague? 'Détails de la compétition: '+selectedLeague.name :''" [(visible)]="isEditingTeams" [style]="{width: '1000px', height: '900px'}" [draggable]="false" [resizable]="false" [modal]="true">
-    <p-tabView (onChange)="onTabChange($event, selectedLeague)">
+    <p-tabView [activeIndex]="activeTabIndex" (onChange)="onTabChange($event)">
         <p-tabPanel header="Compétitions">
             <div class="border rounded-md p-4 bg-gray-50  overflow-y-auto">
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-2 gap-4">
-                    <ng-container>
-                        <div *ngFor="let league of selectedLeague?.leagues; let i = index; " class="relative border rounded-lg p-4 shadow-sm flex flex-col items-center gap-2 bg-white">
+                    <ng-container *ngIf="selectedLeague?.leagues">
+                        <div *ngFor="let league of selectedLeague.leagues; let i = index; " class="relative border rounded-lg p-4 shadow-sm flex flex-col items-center gap-2 bg-white">
                             <img *ngIf="league.logo; else noLogo" [src]="league.logo" alt="Logo" class=" h-[80px] object-contain" />
                             <ng-template #noLogo>
                                 <div class="h-[80px] w-[80px] flex items-center justify-center bg-gray-200 rounded-full text-gray-500 text-md font-bold">
@@ -185,19 +185,23 @@
                                 </div>
                             </ng-template>
                             <div class="text-base font-bold">
-                                {{ league?.name }}
+                                {{ league.name }}
                             </div>
-                            <div class="text-base text-gray-500 text-center">{{ league?.teams_count }} équipes</div>
+                            <div class="text-base text-gray-500 text-center">{{ league.teams_count }} équipes</div>
                         </div>
                     </ng-container>
                 </div>
             </div>
         </p-tabPanel>
-        <p-tabPanel header="Classement" *ngIf="selectedLeague?.leagues && selectedLeague.leagues[0]?.pools_count === 1">
-            <app-ranking-table [matches]="matches" [teams]="selectedLeagueTeams"></app-ranking-table>
-        </p-tabPanel>
-        <p-tabPanel [header]="'Poule ' + group.name" *ngFor="let group of selectedLeague.leagues[0]?.pools">
-            <app-ranking-table [matches]="matches" [teams]="group.teams"></app-ranking-table>
-        </p-tabPanel>
+        <ng-container *ngIf="selectedLeague?.leagues && selectedLeague.leagues[0] as firstLeague">
+            <p-tabPanel header="Classement" *ngIf="firstLeague.pools_count === 1">
+                <app-ranking-table [rankings]="rankings"></app-ranking-table>
+            </p-tabPanel>
+            <ng-container *ngIf="firstLeague.pools_count && firstLeague.pools_count > 1">
+                <p-tabPanel [header]="'Poule ' + group.name" *ngFor="let group of firstLeague.pools">
+                    <app-ranking-table [rankings]="rankings"></app-ranking-table>
+                </p-tabPanel>
+            </ng-container>
+        </ng-container>
     </p-tabView>
 </p-dialog>
