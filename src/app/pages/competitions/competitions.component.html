@@ -171,116 +171,33 @@
   </div>
 </div>
 
- <p-dialog [header]="selectedLeague? 'Compétitions: '+selectedLeague.name :''" [(visible)]="isEditingTeams" [style]="{width: '1000px', height: '900px'}" [draggable]="false" [resizable]="false" [modal]="true">
-    <form [formGroup]="teamsForm" class="flex flex-col gap-6 px-4">
-  <!-- Barre de recherche -->
-<!--   <div>
-    <label class="font-bold block mb-1">Rechercher une équipe</label>
-    <input
-      pInputText
-      type="text"
-      [formControl]="teamSearchControl"
-      placeholder="Nom ou abréviation "
-      class="w-full"
-    />
-
-  </div> -->
-
-  <!-- Grille des cartes -->
-<!-- ✅ Case à cocher pour tout sélectionner -->
-<!-- <div class="flex items-center mb-4">
-  <p-checkbox
-    binary="true"
-     [formControl]="selectAllTeamsControl"
-    (onChange)="toggleAllSelections()"
-    inputId="select-all"
-    class="mr-2"
-  ></p-checkbox>
-  <label for="select-all" class="text-sm font-medium">Tout sélectionner</label>
-</div> -->
-
-<!-- ✅ Conteneur scrollable -->
-<div class="border rounded-md p-4 bg-gray-50  overflow-y-auto">
-  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-2 gap-4">
-    <ng-container>
-      <div
-        *ngFor="let league of selectedLeague?.leagues; let i = index; "
-        class="relative border rounded-lg p-4 shadow-sm flex flex-col items-center gap-2 bg-white"
-
-      >
-<!--         <p-checkbox
-          binary="true"
-          [formControl]="teamSelectionControls[i]"
-          class="absolute top-2 left-2"
-          [id]="'team-' + team.id"
-          (onChange)="updateGlobalSelection()"
-        ></p-checkbox> -->
-
-         <!-- ✅ Image ou fallback -->
-        <img
-          *ngIf="league.logo; else noLogo"
-          [src]="league.logo"
-          alt="Logo"
-          class=" h-[80px] object-contain"
-        />
-        <ng-template #noLogo>
-          <!-- Icône ou texte par défaut -->
-          <div class="h-[80px] w-[80px] flex items-center justify-center bg-gray-200 rounded-full text-gray-500 text-md font-bold">
-            N/A
-          </div>
-        </ng-template>
-
-        <!-- ✅ Abréviation avec style conditionnel -->
-        <div
-          class="text-base font-bold"
-        >
-          {{ league?.name }}
-        </div>
-
-        <!-- ✅ Nom de l’équipe -->
-        <div class="text-base text-gray-500 text-center">{{ league?.teams_count }} équipes</div>
-      </div>
-    </ng-container>
-  </div>
-</div>
-  <span class="text-red-500"
-    *ngIf="!selectedTeamObjects.length && teamsForm.get('league_id')?.touched  ">
-    Veuillez sélectionner les équipes.
-  </span>
-
-  <!-- Checker si le nombre dequpes choisies correspond au nombre dequipes de la ligue -->
- <!--  <span class="text-red-500"
-    *ngIf="selectedTeamObjects.length  && selectedLeague?.teams_count != selectedTeamObjects.length">
-    Le nombre d'équipes sélectionnées ({{ selectedTeamObjects.length }}) ne correspond pas au nombre d'équipes de la ligue ({{ selectedLeague.teams_count }}).
-  </span> -->
-
-
-
-
-  <!-- Équipes sélectionnées -->
-  <div *ngIf="selectedTeamObjects.length" class="mt-4">
-    <label class="font-bold block mb-2">Équipes sélectionnées ({{ selectedTeamObjects.length }})</label>
-    <div class="flex flex-wrap gap-2">
-
-
-            <div *ngFor="let team of selectedTeamObjects" class="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-full">
-         <img *ngIf="team.logo" [src]="team.logo" alt="Logo" class="w-10 object-contain" />
-                <span class="text-md font-bold">{{ team.abbreviation }}</span>
-        <button
-          pButton
-          icon="pi pi-times"
-          class="p-button-rounded p-button-md p-button-text p-button-danger"
-          (click)="uncheckTeam(team?.id!)"
-          type="button"
-        ></button>
-      </div>
-    </div>
-  </div>
-</form>
-
-<!--     <ng-template #footer>
-        <p-button [raised]="true" severity="secondary" label="Annuler" icon="pi pi-times" text (click)="closeTeamsForm()"  />
-        <p-button [loading]="loading" [raised]="true" label="OK" icon="pi pi-check"  [disabled]="selectedLeague.teams_count != selectedTeamObjects.length" (click)="saveLeagueTeams()"/>
-    </ng-template> -->
-
+<p-dialog [header]="selectedLeague? 'Détails de la compétition: '+selectedLeague.name :''" [(visible)]="isEditingTeams" [style]="{width: '1000px', height: '900px'}" [draggable]="false" [resizable]="false" [modal]="true">
+    <p-tabView (onChange)="onTabChange($event, selectedLeague)">
+        <p-tabPanel header="Compétitions">
+            <div class="border rounded-md p-4 bg-gray-50  overflow-y-auto">
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-2 gap-4">
+                    <ng-container>
+                        <div *ngFor="let league of selectedLeague?.leagues; let i = index; " class="relative border rounded-lg p-4 shadow-sm flex flex-col items-center gap-2 bg-white">
+                            <img *ngIf="league.logo; else noLogo" [src]="league.logo" alt="Logo" class=" h-[80px] object-contain" />
+                            <ng-template #noLogo>
+                                <div class="h-[80px] w-[80px] flex items-center justify-center bg-gray-200 rounded-full text-gray-500 text-md font-bold">
+                                    N/A
+                                </div>
+                            </ng-template>
+                            <div class="text-base font-bold">
+                                {{ league?.name }}
+                            </div>
+                            <div class="text-base text-gray-500 text-center">{{ league?.teams_count }} équipes</div>
+                        </div>
+                    </ng-container>
+                </div>
+            </div>
+        </p-tabPanel>
+        <p-tabPanel header="Classement" *ngIf="selectedLeague?.leagues && selectedLeague.leagues[0]?.pools_count === 1">
+            <app-ranking-table [matches]="matches" [teams]="selectedLeagueTeams"></app-ranking-table>
+        </p-tabPanel>
+        <p-tabPanel [header]="'Poule ' + group.name" *ngFor="let group of selectedLeague.leagues[0]?.pools">
+            <app-ranking-table [matches]="matches" [teams]="group.teams"></app-ranking-table>
+        </p-tabPanel>
+    </p-tabView>
 </p-dialog>

@@ -17,6 +17,10 @@ export class MatchService {
       return this.http.get<any[]>(this.baseUrl+"seasons"+"/"+id);
     }
 
+    getByLeagueId(id:string): Observable<any[]> {
+      return this.http.get<any[]>(this.baseUrl+"leagues"+"/"+id+"/matches");
+    }
+
     reschedule(id : string, data: any): Observable<any[]> {
       return this.http.put<any[]>(this.apiUrl+"/"+id,data);
     }

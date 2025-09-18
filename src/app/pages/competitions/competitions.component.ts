@@ -19,6 +19,10 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { Team } from '../../models/team.model';
 import { EquipeService } from '../../service/equipe.service';
 import { CheckboxModule } from 'primeng/checkbox';
+import { RankingTableComponent } from './ranking-table/ranking-table.component';
+import { MatchService } from '../../service/match.service';
+import { Match } from '../../models/match.model';
+import { TabViewModule } from 'primeng/tabview';
 
 @Component({
   selector: 'app-ligues',
@@ -38,7 +42,9 @@ import { CheckboxModule } from 'primeng/checkbox';
     ReactiveFormsModule,
     FileUploadModule,
     InputNumberModule,
-    CheckboxModule
+    CheckboxModule,
+    RankingTableComponent,
+    TabViewModule
   ]
 })
 export class CompetitionsComponent implements OnInit {
@@ -70,6 +76,8 @@ export class CompetitionsComponent implements OnInit {
   teamSearchControl = new FormControl('');
   teamSearchTeam: string = '';
   isEditingTeams: boolean = false;
+  matches: Match[] = [];
+  activeLeagueId: string | null = null;
 
 
   constructor(
@@ -79,7 +87,8 @@ export class CompetitionsComponent implements OnInit {
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
     private fb: FormBuilder,
-    private equipeService: EquipeService
+    private equipeService: EquipeService,
+    private matchService: MatchService
   ) {
     this.leagueForm = this.fb.group({
       name: ['', Validators.required],
@@ -457,5 +466,32 @@ updateGlobalSelection() {
 
     getOriginalIndex(obj: any): number {
   return this.leagues.indexOf(obj) + 1;
-}
+  }
+
+  loadMatches(leagueId: string): void {
+    this.activeLeagueId = leagueId;
+    this.matchService.getByLeagueId(leagueId).subscribe({
+      next: (res: any) => {
+        this.matches = res?.data?.matches || [];
+      },
+      error: (err) => {
+        console.error('Erreur lors du chargement des matchs', err);
+      }
+    });
+  }
+
+  onTabChange(event: any, league: League) {
+    if (event.index === 1) { // Assuming the ranking tab is the second tab (index 1)
+      this.loadMatches(league.id);
+    }
+  }
+
+  get selectedLeagueTeams(): Team[] {
+    if (!this.selectedLeague || !this.selectedLeague.leagues) {
+      return [];
+    }
+    return this.selectedLeague.leagues.reduce((acc, league) => {
+      return acc.concat(league.teams);
+    }, []);
+  }
 }

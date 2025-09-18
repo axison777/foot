@@ -9,6 +9,8 @@ export interface Match {
   team_two_id?: string;
   team_one?:Team;
   team_two?:Team;
+  team_one_score?: number;
+  team_two_score?: number;
 
   stadium_id?: string;
   stadium?:Stadium;
