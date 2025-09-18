@@ -1,15 +1,17 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
+import { MultiSelectModule } from 'primeng/multiselect';
 import { RolePermissionService } from '../../service/role-permission.service';
 
 @Component({
   selector: 'app-roles',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, CardModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, DialogModule, ButtonModule, CardModule, MultiSelectModule],
   template: `
   <div class="p-3 flex flex-col gap-4">
     <div class="flex justify-between items-center">
@@ -17,23 +19,34 @@ import { RolePermissionService } from '../../service/role-permission.service';
       <button class="p-button p-component" (click)="openCreate()">Créer un rôle</button>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-      <p-card *ngFor="let r of roles" header="{{ r?.name || r?.slug }}" subheader="{{ r?.slug }}">
-        <ng-template pTemplate="content">
-          <div class="text-sm text-gray-600 mb-2">Permissions:</div>
-          <div class="flex flex-wrap gap-2 mb-3">
-            <span class="px-2 py-1 bg-gray-100 rounded" *ngFor="let p of (r?.permissions || [])">{{ p?.name || p?.slug }}</span>
-          </div>
-        </ng-template>
-        <ng-template pTemplate="footer">
-          <div class="flex gap-2">
-            <button class="p-button p-component p-button-text" (click)="view(r)">Voir détails</button>
-            <button class="p-button p-component p-button-warning p-button-text" (click)="edit(r)">Modifier</button>
-            <button class="p-button p-component p-button-danger p-button-text" (click)="remove(r)">Supprimer</button>
-          </div>
-        </ng-template>
-      </p-card>
-    </div>
+    <p-card>
+      <ng-template pTemplate="content">
+        <div class="overflow-auto">
+          <table class="w-full border-collapse text-sm">
+            <thead>
+              <tr class="text-left text-gray-600">
+                <th class="py-2 px-2">Nom</th>
+                <th class="py-2 px-2">Slug</th>
+                <th class="py-2 px-2 w-[240px]">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let r of roles" class="border-t">
+                <td class="py-2 px-2 font-semibold">{{ r?.name || r?.slug }}</td>
+                <td class="py-2 px-2">{{ r?.slug }}</td>
+                <td class="py-2 px-2">
+                  <div class="flex gap-2">
+                    <button class="p-button p-component p-button-text" (click)="view(r)">Détails</button>
+                    <button class="p-button p-component p-button-warning p-button-text" (click)="edit(r)">Modifier</button>
+                    <button class="p-button p-component p-button-danger p-button-text" (click)="remove(r)">Supprimer</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </ng-template>
+    </p-card>
 
     <!-- Dialog create/edit -->
     <p-dialog [(visible)]="dialogVisible" [modal]="true" [style]="{width:'560px'}" [draggable]="false" [resizable]="false">
@@ -41,13 +54,17 @@ import { RolePermissionService } from '../../service/role-permission.service';
       <form [formGroup]="roleForm" class="flex flex-col gap-3">
         <input formControlName="name" placeholder="Nom du rôle" class="p-inputtext p-component" />
         <div>
-          <div class="text-sm mb-2">Permissions disponibles</div>
-          <div class="flex flex-wrap gap-2 max-h-48 overflow-auto">
-            <label class="flex items-center gap-2" *ngFor="let p of allPermissions; let i = index">
-              <input type="checkbox" [checked]="selectedPermissionSlugs.has(p.slug)" (change)="togglePermission(p.slug, $any($event.target).checked)" />
-              <span>{{ p.name || p.slug }}</span>
-            </label>
-          </div>
+          <div class="text-sm mb-2">Permissions</div>
+          <p-multiSelect
+            [options]="allPermissions"
+            optionLabel="name"
+            optionValue="slug"
+            display="chip"
+            placeholder="Sélectionner des permissions"
+            [selectionLimit]="200"
+            [(ngModel)]="selectedPermissionList"
+            class="w-full"
+          ></p-multiSelect>
         </div>
       </form>
       <ng-template pTemplate="footer">
@@ -85,7 +102,7 @@ export class RolesComponent implements OnInit {
   selectedRole: any = null;
 
   roleForm: FormGroup;
-  selectedPermissionSlugs = new Set<string>();
+  selectedPermissionList: string[] = [];
 
   constructor(private api: RolePermissionService, fb: FormBuilder) {
     this.roleForm = fb.group({
@@ -114,7 +131,7 @@ export class RolesComponent implements OnInit {
     this.isEditing = false;
     this.selectedRole = null;
     this.roleForm.reset();
-    this.selectedPermissionSlugs.clear();
+    this.selectedPermissionList = [];
     this.dialogVisible = true;
   }
 
@@ -134,18 +151,13 @@ export class RolesComponent implements OnInit {
     this.api.getRole(slug).subscribe(res => {
       this.selectedRole = res?.data?.role || res?.data || role;
       this.roleForm.patchValue({ name: this.selectedRole?.name || this.selectedRole?.slug || '' });
-      this.selectedPermissionSlugs = new Set<string>((this.selectedRole?.permissions || []).map((p: any) => p.slug));
+      this.selectedPermissionList = (this.selectedRole?.permissions || []).map((p: any) => p.slug);
       this.dialogVisible = true;
     });
   }
 
-  togglePermission(slug: string, checked?: boolean): void {
-    if (checked) this.selectedPermissionSlugs.add(slug);
-    else this.selectedPermissionSlugs.delete(slug);
-  }
-
   saveRole(): void {
-    const payload = { name: this.roleForm.value.name, permissions: Array.from(this.selectedPermissionSlugs) } as any;
+    const payload = { name: this.roleForm.value.name, permissions: this.selectedPermissionList } as any;
     const obs = this.isEditing && this.selectedRole?.slug
       ? this.api.updateRole(this.selectedRole.slug, payload)
       : this.api.createRole(payload);
