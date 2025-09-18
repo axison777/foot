@@ -38,8 +38,7 @@ export class AppMenu implements OnInit {
                            /*  { label: 'Compétitions', icon: 'custom-icon podium', routerLink: ['/competitions'] }, */
                         { label: 'Villes', icon: 'pi pi-fw pi-map-marker', routerLink: ['/villes'] },
                         { label: 'Utilisateurs', icon: 'pi pi-fw pi-id-card', routerLink: ['/utilisateurs'] },
-                        { label: 'Rôles', icon: 'pi pi-fw pi-check-square', routerLink: ['/parametres/roles'] },
-                        { label: 'Permissions', icon: 'pi pi-fw pi-key', routerLink: ['/parametres/permissions'] },]
+                        { label: 'Rôles & Permissions', icon: 'pi pi-fw pi-key', routerLink: ['/parametres/roles'] },]
                      },
                    /*   { label: 'Utilisateurs', icon: 'pi pi-fw pi-id-card', routerLink: ['/utilisateurs'] }, */
 

@@ -239,6 +239,13 @@ export class CalendrierComponent implements OnInit {
         return this.standings && this.standings.kind === 'LEAGUE' ? this.standings.rows : [];
     }
 
+    showStandings(): void {
+        this.selectedView = 'STANDINGS';
+        if (!this.standings) {
+            this.buildSeasonStandings();
+        }
+    }
+
 
     constructor(private route: ActivatedRoute, private router: Router, private saisonService: SaisonService, private pdfGeneratorService: PdfGeneratorService, private stadeService:StadeService,
         private matchService: MatchService, private messageService:MessageService, private equipeService:EquipeService,
