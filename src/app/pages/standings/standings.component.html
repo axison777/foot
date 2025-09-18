@@ -1,0 +1,91 @@
+<div class="standings" *ngIf="!loading && competition && standings">
+  <div class="header">
+    <div class="title">
+      <h2>{{ competition.name }} <small *ngIf="competition.season">· {{ competition.season }}</small></h2>
+    </div>
+    <div class="filters">
+      <label>Catégorie</label>
+      <select [value]="category" (change)="onCategoryChange($any($event.target).value)">
+        <option *ngFor="let c of categories" [value]="c">{{ c }}</option>
+      </select>
+    </div>
+  </div>
+
+  <ng-container *ngIf="standings.kind === 'LEAGUE'">
+    <table class="pl-table">
+      <thead>
+        <tr>
+          <th class="col-pos">#</th>
+          <th class="col-team">Équipe</th>
+          <th>P</th><th>G</th><th>N</th><th>P</th>
+          <th>BM</th><th>BE</th><th>DB</th><th>Pts</th>
+          <th class="col-form">Forme</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of standings.rows; let i = index; trackBy: trackByTeam"
+            [class.zone-cl]="competition.qualificationSlots?.championsLeague && i < competition.qualificationSlots.championsLeague"
+            [class.zone-el]="competition.qualificationSlots?.europaLeague && i >= (competition.qualificationSlots?.championsLeague||0) && i < ( (competition.qualificationSlots?.championsLeague||0) + (competition.qualificationSlots?.europaLeague||0) )"
+            [class.zone-conf]="competition.qualificationSlots?.conferenceLeague && i >= ((competition.qualificationSlots?.championsLeague||0)+(competition.qualificationSlots?.europaLeague||0)) && i < ((competition.qualificationSlots?.championsLeague||0)+(competition.qualificationSlots?.europaLeague||0)+(competition.qualificationSlots?.conferenceLeague||0))"
+            [class.zone-rel]="competition.qualificationSlots?.relegation && i >= (standings.rows.length - (competition.qualificationSlots?.relegation||0))">
+          <td class="col-pos">{{ i + 1 }}</td>
+          <td class="col-team">
+            <div class="team">
+              <span class="name">{{ row.teamName }}</span>
+            </div>
+          </td>
+          <td>{{ row.played }}</td>
+          <td>{{ row.wins }}</td>
+          <td>{{ row.draws }}</td>
+          <td>{{ row.losses }}</td>
+          <td>{{ row.goalsFor }}</td>
+          <td>{{ row.goalsAgainst }}</td>
+          <td>{{ row.goalDifference }}</td>
+          <td class="col-pts">{{ row.points }}</td>
+          <td class="col-form">
+            <span *ngFor="let f of (row.formLast5 || [])" [class]="'form-'+f">{{ f }}</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </ng-container>
+
+  <ng-container *ngIf="standings.kind === 'GROUPS'">
+    <div class="groups">
+      <div class="group" *ngFor="let g of groupKeys(standings.groups)">
+        <h3>Poule {{ g }}</h3>
+        <table class="pl-table">
+          <thead>
+            <tr>
+              <th class="col-pos">#</th>
+              <th class="col-team">Équipe</th>
+              <th>P</th><th>G</th><th>N</th><th>P</th>
+              <th>BM</th><th>BE</th><th>DB</th><th>Pts</th>
+              <th class="col-form">Forme</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of standings.groups[g]; let i = index; trackBy: trackByTeam">
+              <td class="col-pos">{{ i + 1 }}</td>
+              <td class="col-team"><div class="team"><span class="name">{{ row.teamName }}</span></div></td>
+              <td>{{ row.played }}</td>
+              <td>{{ row.wins }}</td>
+              <td>{{ row.draws }}</td>
+              <td>{{ row.losses }}</td>
+              <td>{{ row.goalsFor }}</td>
+              <td>{{ row.goalsAgainst }}</td>
+              <td>{{ row.goalDifference }}</td>
+              <td class="col-pts">{{ row.points }}</td>
+              <td class="col-form">
+                <span *ngFor="let f of (row.formLast5 || [])" [class]="'form-'+f">{{ f }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
+</div>
+
+<div class="loading" *ngIf="loading">Chargement...</div>
+

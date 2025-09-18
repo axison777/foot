@@ -1,0 +1,55 @@
+<div class="player-stats">
+  <div class="header">
+    <div class="tabs">
+      <button [class.active]="tab==='SCORERS'" (click)="changeTab('SCORERS')">Buteurs</button>
+      <button [class.active]="tab==='ASSISTS'" (click)="changeTab('ASSISTS')">Passeurs</button>
+      <button [class.active]="tab==='CLEANS'" (click)="changeTab('CLEANS')">Clean sheets</button>
+    </div>
+    <div class="filters">
+      <label>Catégorie</label>
+      <select [value]="category" (change)="changeCategory($any($event.target).value)">
+        <option *ngFor="let c of categories" [value]="c">{{ c }}</option>
+      </select>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="loading">Chargement...</div>
+
+  <table *ngIf="!loading && tab==='SCORERS'">
+    <thead><tr><th>#</th><th>Joueur</th><th>Équipe</th><th>Buts</th><th>(Pen.)</th></tr></thead>
+    <tbody>
+      <tr *ngFor="let r of scorers; let i = index">
+        <td>{{ i+1 }}</td>
+        <td>{{ r.playerName }}</td>
+        <td>{{ r.teamName }}</td>
+        <td>{{ r.goals }}</td>
+        <td>{{ r.penalties || 0 }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table *ngIf="!loading && tab==='ASSISTS'">
+    <thead><tr><th>#</th><th>Joueur</th><th>Équipe</th><th>Passes</th></tr></thead>
+    <tbody>
+      <tr *ngFor="let r of assists; let i = index">
+        <td>{{ i+1 }}</td>
+        <td>{{ r.playerName }}</td>
+        <td>{{ r.teamName }}</td>
+        <td>{{ r.assists }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table *ngIf="!loading && tab==='CLEANS'">
+    <thead><tr><th>#</th><th>Gardien</th><th>Équipe</th><th>Clean sheets</th></tr></thead>
+    <tbody>
+      <tr *ngFor="let r of cleans; let i = index">
+        <td>{{ i+1 }}</td>
+        <td>{{ r.playerName }}</td>
+        <td>{{ r.teamName }}</td>
+        <td>{{ r.cleanSheets }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
