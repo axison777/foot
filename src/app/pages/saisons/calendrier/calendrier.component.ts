@@ -29,6 +29,8 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { CardModule } from 'primeng/card';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { PdfGeneratorService } from '../../../service/pdf-generator.service';
+import { computeLeagueStandings } from '../../../core/utils/standings-calculator';
+import { AnyStandings, StandingsRow, TeamLite, MatchLite } from '../../../models/standings.model';
 
 interface Match {
   number: number;
@@ -230,6 +232,13 @@ export class CalendrierComponent implements OnInit {
 
     second_leg_is_enabled:boolean=false
 
+    // Classement
+    selectedView: 'CALENDAR' | 'STANDINGS' | string = 'CALENDAR';
+    standings?: AnyStandings;
+    get leagueRows(): StandingsRow[] {
+        return this.standings && this.standings.kind === 'LEAGUE' ? this.standings.rows : [];
+    }
+
 
     constructor(private route: ActivatedRoute, private router: Router, private saisonService: SaisonService, private pdfGeneratorService: PdfGeneratorService, private stadeService:StadeService,
         private matchService: MatchService, private messageService:MessageService, private equipeService:EquipeService,
@@ -305,6 +314,8 @@ export class CalendrierComponent implements OnInit {
             day.groupedMatchesByDate = this.groupMatchesByDate(day.matches);
         });
         });
+        // Construire le classement sur la saison
+        this.buildSeasonStandings();
         this.loading = false;
       },
       error: () => {
@@ -336,6 +347,8 @@ export class CalendrierComponent implements OnInit {
             day.groupedMatchesByDate = this.groupMatchesByDate(day.matches);
         });
         });
+        // Construire le classement sur la poule sélectionnée
+        this.buildSeasonStandings();
         this.loading = false;
       },
       error: () => {
@@ -373,6 +386,54 @@ export class CalendrierComponent implements OnInit {
 
   return result;
 }
+
+  private buildSeasonStandings(): void {
+    try {
+      // Extraire toutes les équipes présentes dans la saison (via calendrier)
+      const teamNames = new Set<string>();
+      for (const phase of this.phases || []) {
+        for (const day of phase?.matchdays || []) {
+          for (const m of (day.matches as any[] | undefined) || []) {
+            if (m?.team1) teamNames.add(m.team1);
+            if (m?.team2) teamNames.add(m.team2);
+          }
+        }
+      }
+
+      const teams: TeamLite[] = Array.from(teamNames).map((name, idx) => ({ id: `T${idx + 1}`, name }));
+      const nameToId = new Map(teams.map(t => [t.name, t.id]));
+
+      // Extraire les matchs joués avec score si disponibles
+      const matches: MatchLite[] = [];
+      for (const phase of this.phases || []) {
+        for (const day of phase?.matchdays || []) {
+          for (const m of (day.matches as any[] | undefined) || []) {
+            // Si pas de score, on ignore pour le classement
+            const hasScore = typeof m?.team1_goals === 'number' && typeof m?.team2_goals === 'number';
+            if (!hasScore) continue;
+            const homeId = nameToId.get(m.team1) || m.team1_id || '';
+            const awayId = nameToId.get(m.team2) || m.team2_id || '';
+            if (!homeId || !awayId) continue;
+            matches.push({
+              id: `${m?.football_match_id || m?.id || Math.random()}`,
+              competitionId: this.seasonId || 'season',
+              category: 'M_SENIOR',
+              status: 'FINISHED',
+              homeTeamId: String(homeId),
+              awayTeamId: String(awayId),
+              homeGoals: m.team1_goals,
+              awayGoals: m.team2_goals,
+            });
+          }
+        }
+      }
+
+      this.standings = computeLeagueStandings(teams, matches);
+    } catch (e) {
+      // En cas d’erreur, ne pas bloquer l’affichage du calendrier
+      this.standings = undefined;
+    }
+  }
 
 exportAsExcel(phase: Phase) {
   const rows: any[] = [];

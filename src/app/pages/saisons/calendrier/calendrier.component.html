@@ -73,18 +73,29 @@
     *ngFor="let phase of phases; let i = index"
     pButton
     style="font-weight: 700; font-size: 20px"
-    [class.active-phase]="selectedPhaseIndex === i"
-    [class.inactive-phase]="selectedPhaseIndex !== i"
-    (click)="selectedPhaseIndex = i"
+    [class.active-phase]="selectedPhaseIndex === i && selectedView==='CALENDAR'"
+    [class.inactive-phase]="!(selectedPhaseIndex === i && selectedView==='CALENDAR')"
+    (click)="selectedPhaseIndex = i; selectedView='CALENDAR'"
   >
     {{ phase.name }} ({{ phase?.start | date: 'dd/MM/yyyy' }} au {{ phase.end | date: 'dd/MM/yyyy' }})
+  </button>
+
+  <button
+    *ngIf="phases.length"
+    pButton
+    style="font-weight: 700; font-size: 20px"
+    [class.active-phase]="selectedView==='STANDINGS'"
+    [class.inactive-phase]="selectedView!=='STANDINGS'"
+    (click)="selectedView='STANDINGS'"
+  >
+    Classement
   </button>
 
   <button *ngIf="phases.length" pButton icon="pi pi-refresh" severity="danger" size="large"  pTooltip="(Ré)Générer la phase retour" tooltipPosition="bottom" (click)="openGenerateDialog()"  ></button>
 
 </div>
 
-<div *ngIf="phases[selectedPhaseIndex] as phase">
+<div *ngIf="selectedView==='CALENDAR' && phases[selectedPhaseIndex] as phase">
  <p-carousel
   [value]="phase.matchdays"
   [numVisible]="2"
@@ -207,6 +218,38 @@
     </div>
 
     <div class="flex-none w-8"></div>
+</div>
+
+<div *ngIf="selectedView.toString()=='STANDINGS'" class="mt-4">
+  <div *ngIf="!standings">
+    <p class="text-center text-gray-600">Pas encore de résultats pour établir un classement.</p>
+  </div>
+  <div *ngIf="standings?.kind=='LEAGUE'">
+    <table class="table-fixed w-full border-collapse text-sm text-gray-800">
+      <thead>
+        <tr>
+          <th class="text-left">#</th>
+          <th class="text-left">Équipe</th>
+          <th>P</th><th>G</th><th>N</th><th>P</th>
+          <th>BM</th><th>BE</th><th>DB</th><th>Pts</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of leagueRows; let i = index">
+          <td>{{ i+1 }}</td>
+          <td>{{ row.teamName }}</td>
+          <td>{{ row.played }}</td>
+          <td>{{ row.wins }}</td>
+          <td>{{ row.draws }}</td>
+          <td>{{ row.losses }}</td>
+          <td>{{ row.goalsFor }}</td>
+          <td>{{ row.goalsAgainst }}</td>
+          <td>{{ row.goalDifference }}</td>
+          <td class="font-bold">{{ row.points }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </div>
 
             <!-- Ligne 3: VS -->
